@@ -8,10 +8,9 @@
 // 2019-12-22 jzorrilla@x-red.com - Modifico el script para obtener el valor del dolar
 
 // Valida el numero de argumentos
-if ($argc < 2) {
-	exit( "Uso: php $argv[0] <fecha inicio en formato dd-mm-yyyy>\n" );
+if ($argc ==  2 and $argv[1] == "--h") {
+	exit( "Uso: php $argv[0] [fecha inicio en formato dd-mm-yyyy]\n     Sin el parametro fecha asume la fecha actual.\n" );
 }
-
 
 // Valida que exista archivo de configuracion
 if (file_exists(dirname(__FILE__) . "/config.php")) {
@@ -34,20 +33,19 @@ date_default_timezone_set('America/Santiago');
 $con = mysqli_connect($DB_SERVIDOR,$DB_USUARIO,$DB_CLAVE) or die("Imposible conectarse al servidor.");
 mysqli_select_db($con, $DB_BASE) or die("Imposible abrir Base de datos");
 
-$fecha = date_create($argv[1]);
+if ($argc < 2) {
+	$fecha = date_create(date('Y-m-d'));
+} else {
+	$fecha = date_create($argv[1]);
+}
 
 $fin = 0;
 
 while (!$fin) {
-
 	$jsonsource = $URL . date_format($fecha,'d-m-Y');
-
 	if ($source = file_get_contents($jsonsource)) {
-
 		echo "Obtiene los datos desde $jsonsource\n";
-
 		$json = json_decode($source);
-
 		if (sizeof($json->serie)!=0) {
 				$sql = "insert ignore into dolar (dolar_fecha,dolar_valor,dolar_fechaact) values ('" .
 					date_format($fecha,'Y-m-d') . "'," . $json->serie[0]->valor .",now())";
@@ -55,7 +53,6 @@ while (!$fin) {
 		}
 		else
 			$fin =1;
-
 		date_add($fecha, date_interval_create_from_date_string('1 days'));
 
 	}
